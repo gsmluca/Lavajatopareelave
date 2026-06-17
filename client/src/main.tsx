@@ -1,5 +1,10 @@
 import { trpc } from "@/lib/trpc";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
+
+// URL da API - usa Render em produção, localhost em desenvolvimento
+const API_URL = process.env.NODE_ENV === "production" 
+  ? "https://pare-e-lave-backend.onrender.com"
+  : "http://localhost:3000";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
@@ -40,12 +45,18 @@ queryClient.getMutationCache().subscribe(event => {
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: "/api/trpc",
+      url: process.env.NODE_ENV === "production" 
+        ? "https://pare-e-lave-backend.onrender.com/api/trpc"
+        : "/api/trpc",
       transformer: superjson,
       fetch(input, init) {
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
+          headers: {
+            ...(init?.headers ?? {}),
+            "Content-Type": "application/json",
+          },
         });
       },
     }),
