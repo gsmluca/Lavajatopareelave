@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { trpc } from "@/lib/trpc";
 import { Loader2, Lock, User } from "lucide-react";
 
 interface LoginFormProps {
@@ -11,6 +12,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const [rememberMe, setRememberMe] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const utils = trpc.useUtils();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,6 +42,11 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       } else if (data.success) {
         // Fallback for old backend version - use the session cookie (not ideal for cross-origin)
         // But we'll rely on the server-side fix above for production
+      }
+
+      // Manually set user in tRPC cache to avoid race condition with auth.me query
+      if (data.user) {
+        utils.auth.me.setData(undefined, data.user);
       }
 
       onLoginSuccess();

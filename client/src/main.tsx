@@ -4,7 +4,7 @@ import { trpc } from "@/lib/trpc";
 const UNAUTHED_ERR_MSG = "Please login (10001)";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { httpLink, TRPCClientError } from "@trpc/client";
+import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
 import superjson from "superjson";
 import App from "./App";
@@ -42,7 +42,7 @@ queryClient.getMutationCache().subscribe(event => {
 
 const trpcClient = trpc.createClient({
   links: [
-    httpLink({
+    httpBatchLink({
       url: `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"}/api/trpc`,
       transformer: superjson,
       fetch(input, init) {
