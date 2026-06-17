@@ -47,6 +47,37 @@ const trpcClient = trpc.createClient({
       transformer: superjson,
       fetch(input, init) {
         const token = localStorage.getItem("auth_token");
+
+        // For batch requests, we need to ensure the body is correctly formatted
+        // tRPC v11 batch format: {"id":"1","method":"mutation","params":{"json":{"vehicleType":"car",...}}}
+        // But the backend expects: {"json":{"vehicleType":"car",...}} for individual requests
+        // We'll use a custom fetch that ensures correct format
+        const body = init?.body ? JSON.parse(init.body as string) : {};
+
+        // If this is a batch request, we need to reformat the body
+        if (Array.isArray(body)) {
+          // Convert batch format to individual request format
+          const newBody = body.map(item => {
+            if (item.params && item.params.json) {
+              return item.params.json;
+            }
+            return item;
+          });
+
+          // Send as individual request instead of batch
+          return globalThis.fetch(input, {
+            ...(init ?? {}),
+            credentials: "include",
+            headers: {
+              ...(init?.headers ?? {}),
+              "Content-Type": "application/json",
+              ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            },
+            body: JSON.stringify(newBody[0]), // Send only first item as individual request
+          });
+        }
+
+        // For non-batch requests, send normally
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
