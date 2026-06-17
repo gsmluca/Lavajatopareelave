@@ -3,10 +3,6 @@ import { trpc } from "@/lib/trpc";
 // Mensagem de erro de autenticação
 const UNAUTHED_ERR_MSG = "Unauthorized";
 
-// URL da API - usa Railway em produção, localhost em desenvolvimento
-const API_URL = process.env.NODE_ENV === "production" 
-  ? "https://pare-e-lave-backend-production.railway.app"
-  : "http://localhost:3000";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
@@ -47,17 +43,17 @@ queryClient.getMutationCache().subscribe(event => {
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: process.env.NODE_ENV === "production" 
-        ? "https://pare-e-lave-backend-production.railway.app/api/trpc"
-        : "/api/trpc",
+      url: `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"}/api/trpc`,
       transformer: superjson,
       fetch(input, init) {
+        const token = localStorage.getItem("auth_token");
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
           headers: {
             ...(init?.headers ?? {}),
             "Content-Type": "application/json",
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
           },
         });
       },

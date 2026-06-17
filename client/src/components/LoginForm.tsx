@@ -18,9 +18,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setLoading(true);
 
     try {
-      const backendUrl = process.env.NODE_ENV === "production"
-        ? "https://pare-e-lave-backend-production.railway.app"
-        : "http://localhost:3000";
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
       
       const response = await fetch(`${backendUrl}/api/auth/login`, {
         method: "POST",
@@ -29,11 +27,16 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         body: JSON.stringify({ username, password, rememberMe }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
         setError(data.error || "Usuário ou senha inválidos");
         setLoading(false);
         return;
+      }
+
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
       }
 
       onLoginSuccess();
