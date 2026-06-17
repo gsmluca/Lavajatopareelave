@@ -18,9 +18,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setLoading(true);
 
     try {
-      const backendUrl = process.env.NODE_ENV === "production"
-        ? "https://pare-e-lave-backend-production-931d.up.railway.app"
-        : "http://localhost:3000";
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
       
       const response = await fetch(`${backendUrl}/api/auth/login`, {
         method: "POST",
