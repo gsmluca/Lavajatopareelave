@@ -7,7 +7,7 @@ import DashboardSimple from "./pages/DashboardSimple";
 import History from "./pages/History";
 import Reports from "./pages/Reports";
 import Statistics from "./pages/Statistics";
-import Expenses from "./pages/Expenses";
+import ExpensesSimple from "./pages/ExpensesSimple";
 import { useAuth } from "./_core/hooks/useAuth";
 import { Loader2, LogOut } from "lucide-react";
 import { useLocation } from "wouter";
@@ -55,7 +55,7 @@ function Router() {
   return (
     <Switch>
       <Route path={"/"} component={DashboardSimple} />
-      <Route path={"/expenses"} component={Expenses} />
+      <Route path={"/expenses"} component={ExpensesSimple} />
       <Route path={"/reports"} component={Reports} />
       <Route path={"/statistics"} component={Statistics} />
       <Route path={"/404"} component={NotFound} />
