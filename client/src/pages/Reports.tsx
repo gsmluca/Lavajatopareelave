@@ -1,91 +1,139 @@
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { Loader2, TrendingUp } from "lucide-react";
-import { trpc } from "@/lib/trpc";
+import React from 'react';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Loader2, TrendingUp } from 'lucide-react';
+import { toast } from 'sonner';
+
+const API = 'https://pare-e-lave-backend-production-931d.up.railway.app/api/trpc';
 
 export default function Reports() {
-  const [period, setPeriod] = useState<"day" | "week" | "month" | "year">("month");
+  const [period, setPeriod] = useState<'day' | 'week' | 'month' | 'year'>('month');
   const [selectedDate, setSelectedDate] = useState(
-    new Date().toISOString().split("T")[0]
+    new Date().toISOString().split('T')[0]
   );
+  const [services, setServices] = useState<any[]>([]);
+  const [expenses, setExpenses] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const getDateRange = () => {
     const now = new Date(selectedDate);
     let startDate = selectedDate;
     let endDate = selectedDate;
 
-    if (period === "week") {
+    if (period === 'week') {
       const weekStart = new Date(now);
       weekStart.setDate(now.getDate() - now.getDay());
-      startDate = weekStart.toISOString().split("T")[0];
+      startDate = weekStart.toISOString().split('T')[0];
       endDate = selectedDate;
-    } else if (period === "month") {
+    } else if (period === 'month') {
       const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-      startDate = monthStart.toISOString().split("T")[0];
+      startDate = monthStart.toISOString().split('T')[0];
       endDate = selectedDate;
-    } else if (period === "year") {
+    } else if (period === 'year') {
       const yearStart = new Date(now.getFullYear(), 0, 1);
-      startDate = yearStart.toISOString().split("T")[0];
+      startDate = yearStart.toISOString().split('T')[0];
       endDate = selectedDate;
     }
 
     return { startDate, endDate };
   };
 
-  const { startDate, endDate } = getDateRange();
-  const { data: services = [], isLoading: servicesLoading } = trpc.services.getByPeriod.useQuery({
-    startDate,
-    endDate,
-  });
+  const fetchReports = async () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
 
-  const { data: expenses = [], isLoading: expensesLoading } = trpc.expenses.getByPeriod.useQuery({
-    startDate,
-    endDate,
-  });
+    setLoading(true);
+    try {
+      const { startDate, endDate } = getDateRange();
+
+      // Fetch services
+      const servicesUrl = new URL(`${API}/services.getByPeriod`);
+      servicesUrl.searchParams.set('input', JSON.stringify({
+        json: { startDate, endDate }
+      }));
+      const servicesRes = await fetch(servicesUrl.toString(), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const servicesData = await servicesRes.json();
+      if (servicesData.result?.data?.json) {
+        setServices(servicesData.result.data.json);
+      } else {
+        console.error('[Reports] Services error:', servicesData);
+        setServices([]);
+      }
+
+      // Fetch expenses
+      const expensesUrl = new URL(`${API}/expenses.getByPeriod`);
+      expensesUrl.searchParams.set('input', JSON.stringify({
+        json: { startDate, endDate }
+      }));
+      const expensesRes = await fetch(expensesUrl.toString(), {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const expensesData = await expensesRes.json();
+      if (expensesData.result?.data?.json) {
+        setExpenses(expensesData.result.data.json);
+      } else {
+        console.error('[Reports] Expenses error:', expensesData);
+        setExpenses([]);
+      }
+    } catch (err) {
+      console.error('[Reports] Fetch error:', err);
+      toast.error('Erro ao carregar relatório');
+      setServices([]);
+      setExpenses([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  React.useEffect(() => {
+    fetchReports();
+  }, [period, selectedDate]);
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
     }).format(value);
   };
 
   const formatDate = (date: Date) => {
-    return new Intl.DateTimeFormat("pt-PT", {
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
+    return new Intl.DateTimeFormat('pt-PT', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
     }).format(new Date(date));
   };
 
   const getVehicleIcon = (type: string) => {
     switch (type) {
-      case "car":
-        return "🚗";
-      case "motorcycle":
-        return "🏍️";
-      case "suv":
-        return "🚙";
-      case "truck":
-        return "🚚";
+      case 'car':
+        return '🚗';
+      case 'motorcycle':
+        return '🏍️';
+      case 'suv':
+        return '🚙';
+      case 'truck':
+        return '🚚';
       default:
-        return "🚗";
+        return '🚗';
     }
   };
 
   const getPaymentIcon = (method: string) => {
     switch (method) {
-      case "pix":
-        return "📱";
-      case "cash":
-        return "💵";
-      case "card":
-        return "💳";
+      case 'pix':
+        return '📱';
+      case 'cash':
+        return '💵';
+      case 'card':
+        return '💳';
       default:
-        return "💰";
+        return '💰';
     }
   };
 
@@ -93,16 +141,16 @@ export default function Reports() {
   const totalExpenses = expenses.reduce((sum, e) => sum + parseFloat(e.amount as any), 0);
   const netProfit = totalRevenue - totalExpenses;
 
-  const carCount = services.filter((s) => s.vehicleType === "car").length;
-  const motorcycleCount = services.filter((s) => s.vehicleType === "motorcycle").length;
-  const suvCount = services.filter((s) => s.vehicleType === "suv").length;
-  const truckCount = services.filter((s) => s.vehicleType === "truck").length;
+  const carCount = services.filter((s) => s.vehicleType === 'car').length;
+  const motorcycleCount = services.filter((s) => s.vehicleType === 'motorcycle').length;
+  const suvCount = services.filter((s) => s.vehicleType === 'suv').length;
+  const truckCount = services.filter((s) => s.vehicleType === 'truck').length;
 
   const periodLabel = {
-    day: "Dia",
-    week: "Semana",
-    month: "Mês",
-    year: "Ano",
+    day: 'Dia',
+    week: 'Semana',
+    month: 'Mês',
+    year: 'Ano',
   }[period];
 
   return (
@@ -121,18 +169,18 @@ export default function Reports() {
         <div className="space-y-3">
           <label className="block text-sm font-semibold text-gray-900">Período</label>
           <div className="grid grid-cols-2 gap-2">
-            {(["day", "week", "month", "year"] as const).map((p) => (
+            {(['day', 'week', 'month', 'year'] as const).map((p) => (
               <Button
                 key={p}
-                variant={period === p ? "default" : "outline"}
+                variant={period === p ? 'default' : 'outline'}
                 onClick={() => setPeriod(p)}
                 className={`rounded-lg text-sm font-semibold capitalize ${
                   period === p
-                    ? "bg-purple-600 hover:bg-purple-700 text-white"
-                    : "border-purple-200 text-purple-600 hover:bg-purple-50"
+                    ? 'bg-purple-600 hover:bg-purple-700 text-white'
+                    : 'border-purple-200 text-purple-600 hover:bg-purple-50'
                 }`}
               >
-                {p === "day" ? "Dia" : p === "week" ? "Semana" : p === "month" ? "Mês" : "Ano"}
+                {p === 'day' ? 'Dia' : p === 'week' ? 'Semana' : p === 'month' ? 'Mês' : 'Ano'}
               </Button>
             ))}
           </div>
@@ -146,13 +194,13 @@ export default function Reports() {
           />
         </div>
 
-        {/* Cash Flow Summary */}
-        {servicesLoading || expensesLoading ? (
+        {loading ? (
           <div className="flex justify-center py-8">
             <Loader2 className="w-6 h-6 animate-spin text-purple-600" />
           </div>
         ) : (
           <>
+            {/* Cash Flow Summary */}
             <div className="grid grid-cols-1 gap-3">
               {/* Revenue */}
               <div className="bg-gradient-to-br from-green-500 to-green-600 rounded-2xl p-6 shadow-lg text-white">
@@ -169,11 +217,13 @@ export default function Reports() {
               </div>
 
               {/* Net Profit */}
-              <div className={`bg-gradient-to-br ${netProfit >= 0 ? "from-emerald-500 to-emerald-600" : "from-orange-500 to-orange-600"} rounded-2xl p-6 shadow-lg text-white`}>
-                <p className={`${netProfit >= 0 ? "text-emerald-100" : "text-orange-100"} text-sm font-medium mb-1`}>Lucro Líquido</p>
+              <div className={`bg-gradient-to-br ${netProfit >= 0 ? 'from-emerald-500 to-emerald-600' : 'from-orange-500 to-orange-600'} rounded-2xl p-6 shadow-lg text-white`}>
+                <p className={`${netProfit >= 0 ? 'text-emerald-100' : 'text-orange-100'} text-sm font-medium mb-1`}>
+                  Lucro Líquido
+                </p>
                 <p className="text-3xl font-bold font-poppins">{formatCurrency(netProfit)}</p>
-                <p className={`${netProfit >= 0 ? "text-emerald-100" : "text-orange-100"} text-xs mt-2`}>
-                  {netProfit >= 0 ? "✓ Resultado positivo" : "⚠ Resultado negativo"}
+                <p className={`${netProfit >= 0 ? 'text-emerald-100' : 'text-orange-100'} text-xs mt-2`}>
+                  {netProfit >= 0 ? '✓ Resultado positivo' : '⚠ Resultado negativo'}
                 </p>
               </div>
             </div>
