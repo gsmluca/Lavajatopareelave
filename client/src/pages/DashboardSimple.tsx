@@ -1,3 +1,4 @@
+import React from 'react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -19,6 +20,11 @@ export default function DashboardSimple() {
 
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(false);
+
+  // Carregar serviços automaticamente ao montar o componente
+  React.useEffect(() => {
+    fetchServices();
+  }, []);
 
   const fetchServices = async () => {
     const token = localStorage.getItem('auth_token');

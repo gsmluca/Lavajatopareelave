@@ -35,22 +35,22 @@ export default function ExpensesSimple() {
     const endDate = today.toISOString().split('T')[0];
     const startDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    const res = await fetch('https://pare-e-lave-backend-production-931d.up.railway.app/api/trpc/expenses.getByPeriod', {
+    // Query procedure: must use GET with input in query string
+    const url = new URL('https://pare-e-lave-backend-production-931d.up.railway.app/api/trpc/expenses.getByPeriod');
+    url.searchParams.set('json', JSON.stringify({
+      startDate,
+      endDate,
+    }));
+
+    const res = await fetch(url.toString(), {
       headers: {
-        'Content-Type': 'application/json',
         'Authorization': token ? `Bearer ${token}` : '',
       },
-      method: 'POST',
-      body: JSON.stringify({
-        json: {
-          startDate,
-          endDate,
-        }
-      }),
+      method: 'GET',
     });
 
     const data = await res.json();
-    console.log('[Expenses] API Response:', data); // DEBUG
+    console.log('[Expenses] API Response:', data);
 
     if (data.result?.data?.json) {
       setExpenses(data.result.data.json);
