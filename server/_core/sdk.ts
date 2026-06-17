@@ -257,7 +257,21 @@ class SDKServer {
   }
 
   async authenticateRequest(req: Request): Promise<AuthenticatedUser> {
-    // Regular authentication flow
+    // Try Bearer token from Authorization header first
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      const token = authHeader.substring(7);
+      const session = await this.verifySession(token);
+      if (session && !session.openId.startsWith(CRON_OPEN_ID_PREFIX)) {
+        let user = await db.getUserByOpenId(session.openId);
+        if (user) {
+          await db.upsertUser({ openId: user.openId, lastSignedIn: new Date() });
+          return user;
+        }
+      }
+    }
+
+    // Fallback to cookie-based authentication
     const cookies = this.parseCookies(req.headers.cookie);
     const sessionCookie = cookies.get(COOKIE_NAME);
     const session = await this.verifySession(sessionCookie);

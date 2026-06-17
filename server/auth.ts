@@ -67,6 +67,7 @@ export function registerAuthRoutes(app: Express) {
 
       res.json({
         success: true,
+        token: sessionToken,
         user: {
           id: user.id,
           name: user.name,

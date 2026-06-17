@@ -37,6 +37,9 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
 
       if (data.token) {
         localStorage.setItem("auth_token", data.token);
+      } else if (data.success) {
+        // Fallback for old backend version - use the session cookie (not ideal for cross-origin)
+        // But we'll rely on the server-side fix above for production
       }
 
       onLoginSuccess();
