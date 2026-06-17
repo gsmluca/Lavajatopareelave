@@ -35,8 +35,10 @@ export default function Dashboard() {
       });
       toast.success("Serviço registado com sucesso!");
     },
-    onError: () => {
-      toast.error("Erro ao registar serviço");
+    onError: (error) => {
+      console.error("[Dashboard] Create service error:", error);
+      const errorMessage = error?.message || "Erro ao registar serviço";
+      toast.error(errorMessage);
     },
   });
 
@@ -45,8 +47,10 @@ export default function Dashboard() {
       utils.services.getTodayServices.invalidate();
       toast.success("Serviço eliminado");
     },
-    onError: () => {
-      toast.error("Erro ao eliminar serviço");
+    onError: (error) => {
+      console.error("[Dashboard] Delete service error:", error);
+      const errorMessage = error?.message || "Erro ao eliminar serviço";
+      toast.error(errorMessage);
     },
   });
 
@@ -234,6 +238,7 @@ export default function Dashboard() {
                         variant="ghost"
                         size="sm"
                         onClick={() => deleteMutation.mutate({ id: service.id })}
+                        disabled={deleteMutation.isPending}
                         className="text-red-500 hover:text-red-700 hover:bg-red-50 mt-1"
                       >
                         <Trash2 className="w-4 h-4" />

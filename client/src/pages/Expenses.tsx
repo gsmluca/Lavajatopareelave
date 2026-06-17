@@ -38,8 +38,10 @@ export default function Expenses() {
       });
       toast.success("Gasto registado com sucesso!");
     },
-    onError: () => {
-      toast.error("Erro ao registar gasto");
+    onError: (error) => {
+      console.error("[Expenses] Create error:", error);
+      const errorMessage = error?.message || "Erro ao registar gasto";
+      toast.error(errorMessage);
     },
   });
 
@@ -48,8 +50,10 @@ export default function Expenses() {
       utils.expenses.getByPeriod.invalidate();
       toast.success("Gasto eliminado");
     },
-    onError: () => {
-      toast.error("Erro ao eliminar gasto");
+    onError: (error) => {
+      console.error("[Expenses] Delete error:", error);
+      const errorMessage = error?.message || "Erro ao eliminar gasto";
+      toast.error(errorMessage);
     },
   });
 
