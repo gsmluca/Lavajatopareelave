@@ -45,9 +45,7 @@ queryClient.getMutationCache().subscribe(event => {
 const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
-      url: process.env.NODE_ENV === "production" 
-        ? "https://pare-e-lave-backend-production.railway.app/api/trpc"
-        : "/api/trpc",
+     url: `${import.meta.env.VITE_BACKEND_URL || "http://localhost:3000"}/api/trpc`,
       transformer: superjson,
       fetch(input, init) {
         return globalThis.fetch(input, {
