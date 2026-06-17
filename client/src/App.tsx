@@ -1,6 +1,6 @@
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Route, Switch, Link } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Dashboard from "./pages/Dashboard";
@@ -27,7 +27,7 @@ function BottomNav() {
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-gradient-to-r from-white to-emerald-50 border-t-2 border-emerald-200 flex justify-around items-center h-16 max-w-md mx-auto shadow-lg">
       {tabs.map((tab) => (
-        <a
+        <Link
           key={tab.path}
           href={tab.path}
           className={`flex flex-col items-center justify-center flex-1 h-full gap-1 text-xs font-semibold transition-all duration-200 ${
@@ -45,7 +45,7 @@ function BottomNav() {
             {tab.icon === "chart" && "📈"}
           </span>
           {tab.label}
-        </a>
+        </Link>
       ))}
     </nav>
   );
