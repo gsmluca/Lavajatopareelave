@@ -1,5 +1,7 @@
 import { trpc } from "@/lib/trpc";
-import { UNAUTHED_ERR_MSG } from '@shared/const';
+
+// Mensagem de erro de autenticação
+const UNAUTHED_ERR_MSG = "Unauthorized";
 
 // URL da API - usa Railway em produção, localhost em desenvolvimento
 const API_URL = process.env.NODE_ENV === "production" 
