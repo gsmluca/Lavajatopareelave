@@ -27,11 +27,16 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
         body: JSON.stringify({ username, password, rememberMe }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const data = await response.json();
         setError(data.error || "Usuário ou senha inválidos");
         setLoading(false);
         return;
+      }
+
+      if (data.token) {
+        localStorage.setItem("auth_token", data.token);
       }
 
       onLoginSuccess();
