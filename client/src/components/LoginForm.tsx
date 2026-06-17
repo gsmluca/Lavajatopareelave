@@ -25,6 +25,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
       const response = await fetch(`${backendUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ username, password, rememberMe }),
       });
 
