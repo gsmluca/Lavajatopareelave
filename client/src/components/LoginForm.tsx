@@ -18,7 +18,11 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
     setLoading(true);
 
     try {
-      const response = await fetch("/api/auth/login", {
+      const backendUrl = process.env.NODE_ENV === "production"
+        ? "https://pare-e-lave-backend-production.railway.app"
+        : "http://localhost:3000";
+      
+      const response = await fetch(`${backendUrl}/api/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username, password, rememberMe }),
