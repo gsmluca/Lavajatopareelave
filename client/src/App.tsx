@@ -1,4 +1,3 @@
-import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Route, Switch } from "wouter";
@@ -13,7 +12,6 @@ import { useAuth } from "./_core/hooks/useAuth";
 import { Loader2, LogOut } from "lucide-react";
 import { useLocation } from "wouter";
 import { getLoginUrl } from "./const";
-import { trpc } from "./lib/trpc";
 import { LoginForm } from "./components/LoginForm";
 
 function BottomNav() {
@@ -67,12 +65,7 @@ function Router() {
 }
 
 function AuthGuard() {
-  const { user, loading } = useAuth();
-  const logoutMutation = trpc.auth.logout.useMutation({
-    onSuccess: () => {
-      window.location.href = "/";
-    },
-  });
+  const { user, loading, logout } = useAuth();
 
   if (loading) {
     return (
@@ -92,6 +85,18 @@ function AuthGuard() {
     return <LoginForm onLoginSuccess={() => window.location.href = "/"} />;
   }
 
+  const handleLogout = async () => {
+    try {
+      await logout();
+      // Redirecionar para login após logout bem-sucedido
+      window.location.href = getLoginUrl();
+    } catch (error) {
+      console.error("Logout failed:", error);
+      // Mesmo em caso de erro, redirecionar para login
+      window.location.href = getLoginUrl();
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-white to-teal-50 max-w-md mx-auto relative pb-20">
       {/* Header with User Info and Logout */}
@@ -102,8 +107,7 @@ function AuthGuard() {
             <p className="text-xs text-emerald-100">{user.name || user.email}</p>
           </div>
           <button
-            onClick={() => logoutMutation.mutate()}
-            disabled={logoutMutation.isPending}
+            onClick={handleLogout}
             className="p-2 hover:bg-emerald-700 rounded-lg text-white hover:text-emerald-50 transition-colors disabled:opacity-50"
             title="Sair"
           >
@@ -119,17 +123,14 @@ function AuthGuard() {
   );
 }
 
-function App() {
+export default function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider>
         <TooltipProvider>
-          <Toaster />
           <AuthGuard />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>
   );
 }
-
-export default App;

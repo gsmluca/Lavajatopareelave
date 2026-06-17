@@ -1,7 +1,7 @@
 import { trpc } from "@/lib/trpc";
 
-// Mensagem de erro de autenticação
-const UNAUTHED_ERR_MSG = "Unauthorized";
+// Mensagem de erro de autenticação - deve corresponder ao backend
+const UNAUTHED_ERR_MSG = "Please login (10001)";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
