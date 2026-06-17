@@ -17,6 +17,17 @@ export default function ExpensesSimple() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  // Verificar autenticação ao montar o componente
+  React.useEffect(() => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) {
+      console.warn('[Expenses] No auth token found, redirecting to login');
+      window.location.href = '/';
+      return;
+    }
+    fetchExpenses();
+  }, []);
+
   const fetchExpenses = async () => {
     const token = localStorage.getItem('auth_token');
     const today = new Date();
@@ -36,8 +47,16 @@ export default function ExpensesSimple() {
         }
       }),
     });
+
     const data = await res.json();
-    setExpenses(data.result.data.json || []);
+    console.log('[Expenses] API Response:', data); // DEBUG
+
+    if (data.result?.data?.json) {
+      setExpenses(data.result.data.json);
+    } else {
+      console.error('[Expenses] Unexpected response format:', data);
+      setExpenses([]);
+    }
   };
 
   const createExpense = async () => {
@@ -76,7 +95,7 @@ export default function ExpensesSimple() {
         amount: '',
       });
       setIsOpen(false);
-      fetchExpenses();
+      fetchExpenses(); // Atualiza lista após criar
     } else {
       toast.error(data.error?.json?.message || 'Erro ao registrar gasto');
     }
@@ -98,7 +117,7 @@ export default function ExpensesSimple() {
 
     if (res.ok) {
       toast.success('Gasto eliminado');
-      fetchExpenses();
+      fetchExpenses(); // Atualiza lista após deletar
     } else {
       toast.error('Erro ao eliminar gasto');
     }
