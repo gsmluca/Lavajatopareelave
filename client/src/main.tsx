@@ -47,6 +47,16 @@ const trpcClient = trpc.createClient({
       transformer: superjson,
       fetch(input, init) {
         const token = localStorage.getItem("auth_token");
+
+        // Force individual request by overriding the body to be just the json object
+        if (init?.body) {
+          const body = JSON.parse(init.body as string);
+          // If it's a batch request, extract the first item's json
+          if (Array.isArray(body) && body.length > 0 && body[0].params && body[0].params.json) {
+            init.body = JSON.stringify(body[0].params.json);
+          }
+        }
+
         return globalThis.fetch(input, {
           ...(init ?? {}),
           credentials: "include",
