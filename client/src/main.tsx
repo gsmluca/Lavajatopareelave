@@ -1,9 +1,9 @@
 import { trpc } from "@/lib/trpc";
 import { UNAUTHED_ERR_MSG } from '@shared/const';
 
-// URL da API - usa Render em produção, localhost em desenvolvimento
+// URL da API - usa Railway em produção, localhost em desenvolvimento
 const API_URL = process.env.NODE_ENV === "production" 
-  ? "https://pare-e-lave-backend.onrender.com"
+  ? "https://pare-e-lave-backend-production.railway.app"
   : "http://localhost:3000";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
@@ -46,7 +46,7 @@ const trpcClient = trpc.createClient({
   links: [
     httpBatchLink({
       url: process.env.NODE_ENV === "production" 
-        ? "https://pare-e-lave-backend.onrender.com/api/trpc"
+        ? "https://pare-e-lave-backend-production.railway.app/api/trpc"
         : "/api/trpc",
       transformer: superjson,
       fetch(input, init) {
