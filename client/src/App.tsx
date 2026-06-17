@@ -89,7 +89,7 @@ function AuthGuard() {
   }
 
   if (!user) {
-    return <LoginForm onLoginSuccess={() => window.location.reload()} />;
+    return <LoginForm onLoginSuccess={() => window.location.href = "/"} />;
   }
 
   return (
