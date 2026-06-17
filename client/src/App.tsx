@@ -3,7 +3,7 @@ import NotFound from "@/pages/NotFound";
 import { Route, Switch, Link } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Dashboard from "./pages/Dashboard";
+import DashboardSimple from "./pages/DashboardSimple";
 import History from "./pages/History";
 import Reports from "./pages/Reports";
 import Statistics from "./pages/Statistics";
@@ -54,7 +54,7 @@ function BottomNav() {
 function Router() {
   return (
     <Switch>
-      <Route path={"/"} component={Dashboard} />
+      <Route path={"/"} component={DashboardSimple} />
       <Route path={"/expenses"} component={Expenses} />
       <Route path={"/reports"} component={Reports} />
       <Route path={"/statistics"} component={Statistics} />
