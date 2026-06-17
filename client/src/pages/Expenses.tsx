@@ -66,7 +66,7 @@ export default function Expenses() {
     createMutation.mutate({
       category: formData.category,
       description: formData.description,
-      amount: formData.amount,
+      amount: parseFloat(formData.amount) || 0,
     });
   };
 

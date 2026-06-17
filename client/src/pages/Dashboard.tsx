@@ -64,9 +64,9 @@ export default function Dashboard() {
       vehicleType: formData.vehicleType as "car" | "motorcycle" | "suv" | "truck" | "other",
       clientName: formData.clientName,
       description: formData.description,
-      value: formData.value,
+      value: parseFloat(formData.value) || 0,
       paymentMethod: formData.paymentMethod as "pix" | "cash" | "card" | "other",
-    })
+    });
   };
 
   const totalValue = services.reduce((sum, s) => sum + parseFloat(s.value as any), 0);
