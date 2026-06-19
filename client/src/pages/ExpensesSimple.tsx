@@ -4,21 +4,25 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Loader2, Plus, Trash2, TrendingDown } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Plus, Trash2, TrendingDown, CalendarDays } from 'lucide-react';
 import { toast } from 'sonner';
 
 const API = 'https://pare-e-lave-backend-production-931d.up.railway.app/api/trpc';
 
 export default function ExpensesSimple() {
+  const todayStr = new Date().toISOString().split('T')[0];
   const [isOpen, setIsOpen] = useState(false);
   const [formData, setFormData] = useState({
     category: 'Produtos',
     description: '',
     amount: '',
+    createdAt: todayStr,
   });
   const [expenses, setExpenses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [initialLoading, setInitialLoading] = useState(true);
+  const [selectedDate, setSelectedDate] = useState(todayStr);
 
   React.useEffect(() => {
     const token = localStorage.getItem('auth_token');
@@ -27,18 +31,17 @@ export default function ExpensesSimple() {
       return;
     }
     fetchExpenses();
-  }, []);
+  }, [selectedDate]);
 
   const fetchExpenses = async () => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
 
-    const today = new Date();
-    const endDate = today.toISOString().split('T')[0];
-    const startDate = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
+    setInitialLoading(true);
     try {
-      // tRPC v11 query: GET with input= parameter containing superjson wrapper
+      const startDate = selectedDate;
+      const endDate = selectedDate;
+
       const inputParam = encodeURIComponent(JSON.stringify({
         json: { startDate, endDate }
       }));
@@ -68,7 +71,6 @@ export default function ExpensesSimple() {
 
     setLoading(true);
     try {
-      // Mutation: POST with superjson wrapper { json: { ... } }
       const res = await fetch(`${API}/expenses.create`, {
         method: 'POST',
         headers: {
@@ -80,6 +82,7 @@ export default function ExpensesSimple() {
             category: formData.category,
             description: formData.description || null,
             amount: formData.amount,
+            createdAt: formData.createdAt ? new Date(formData.createdAt + 'T12:00:00').toISOString() : undefined,
           }
         }),
       });
@@ -87,7 +90,7 @@ export default function ExpensesSimple() {
 
       if (res.ok && data.result?.data?.json?.success) {
         toast.success('Gasto registrado com sucesso!');
-        setFormData({ category: 'Produtos', description: '', amount: '' });
+        setFormData({ category: 'Produtos', description: '', amount: '', createdAt: selectedDate });
         setIsOpen(false);
         fetchExpenses();
       } else {
@@ -125,7 +128,6 @@ export default function ExpensesSimple() {
   };
 
   const formatCurrency = (v: number) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
-  const formatDate = (d: Date) => new Intl.DateTimeFormat('pt-PT', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(d));
 
   const getCategoryIcon = (c: string) => {
     switch (c.toLowerCase()) {
@@ -146,6 +148,8 @@ export default function ExpensesSimple() {
     return acc;
   }, {} as Record<string, number>);
 
+  const isToday = selectedDate === todayStr;
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-red-50 pb-24">
       <div className="bg-gradient-to-r from-red-600 to-red-700 text-white px-4 py-6 shadow-lg">
@@ -153,16 +157,34 @@ export default function ExpensesSimple() {
           <TrendingDown className="w-6 h-6" />
           <h1 className="text-2xl font-bold font-poppins">Gastos</h1>
         </div>
-        <p className="text-red-100 text-sm">Controle suas despesas mensais</p>
+        <p className="text-red-100 text-sm">
+          {isToday ? 'Gastos de hoje' : `Gastos do dia ${new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-PT', { day: '2-digit', month: 'long', year: 'numeric' })}`}
+        </p>
       </div>
 
       <div className="px-4 pt-6 space-y-6">
+        {/* Date Selector */}
+        <div className="space-y-3">
+          <label className="block text-sm font-semibold text-gray-900">Ver gastos do dia</label>
+          <div className="flex items-center gap-2">
+            <CalendarDays className="w-5 h-5 text-red-600" />
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              className="rounded-lg border-red-200 focus:border-red-500 focus:ring-red-500"
+            />
+          </div>
+        </div>
+
         <div className="bg-gradient-to-br from-red-500 to-red-600 rounded-2xl p-6 shadow-lg text-white">
-          <p className="text-red-100 text-sm font-medium mb-1">Total de Gastos (Ultimos 30 dias)</p>
+          <p className="text-red-100 text-sm font-medium mb-1">
+            Total de Gastos {isToday ? '(Hoje)' : `(${new Date(selectedDate + 'T12:00:00').toLocaleDateString('pt-PT', { day: '2-digit', month: '2-digit', year: 'numeric' })})`}
+          </p>
           <p className="text-3xl font-bold font-poppins">{formatCurrency(totalExpenses)}</p>
         </div>
 
-        <Button onClick={() => setIsOpen(true)} className="w-full bg-red-600 hover:bg-red-700 text-white py-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all text-base">
+        <Button onClick={() => { setFormData(prev => ({ ...prev, createdAt: selectedDate })); setIsOpen(true); }} className="w-full bg-red-600 hover:bg-red-700 text-white py-6 rounded-2xl font-semibold shadow-lg hover:shadow-xl transition-all text-base">
           <Plus className="w-5 h-5 mr-2" /> Registar Novo Gasto
         </Button>
 
@@ -180,7 +202,7 @@ export default function ExpensesSimple() {
                         <p className="text-xs text-gray-500">Categoria</p>
                       </div>
                     </div>
-                    <p className="font-bold text-red-600 text-lg">{formatCurrency(amount)}</p>
+                    <p className="font-bold text-red-600 text-lg">{formatCurrency(amount as number)}</p>
                   </div>
                 </div>
               ))}
@@ -189,11 +211,13 @@ export default function ExpensesSimple() {
         )}
 
         <div>
-          <h2 className="text-lg font-bold text-gray-900 mb-3 font-poppins">Historico de Gastos</h2>
+          <h2 className="text-lg font-bold text-gray-900 mb-3 font-poppins">
+            Historico de Gastos {isToday ? 'de Hoje' : 'do Dia'}
+          </h2>
           {initialLoading ? (
             <div className="flex justify-center py-8"><Loader2 className="w-6 h-6 animate-spin text-red-600" /></div>
           ) : expenses.length === 0 ? (
-            <div className="bg-white rounded-2xl p-8 text-center border border-red-100"><p className="text-gray-500 text-sm">Nenhum gasto registado</p></div>
+            <div className="bg-white rounded-2xl p-8 text-center border border-red-100"><p className="text-gray-500 text-sm">Nenhum gasto registado neste dia</p></div>
           ) : (
             <div className="space-y-2">
               {expenses.map((expense) => (
@@ -204,10 +228,9 @@ export default function ExpensesSimple() {
                         <span className="text-2xl">{getCategoryIcon(expense.category)}</span>
                         <div>
                           <p className="font-semibold text-gray-900">{expense.category}</p>
-                          <p className="text-xs text-gray-500">{formatDate(expense.createdAt)}</p>
+                          {expense.description && <p className="text-xs text-gray-500">{expense.description}</p>}
                         </div>
                       </div>
-                      {expense.description && <p className="text-sm text-gray-600 ml-10">{expense.description}</p>}
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-red-600 text-lg">{formatCurrency(parseFloat(expense.amount as any))}</p>
@@ -225,7 +248,31 @@ export default function ExpensesSimple() {
         <DialogContent className="rounded-2xl">
           <DialogHeader><DialogTitle className="font-poppins">Registar Novo Gasto</DialogTitle></DialogHeader>
           <form onSubmit={(e) => { e.preventDefault(); createExpense(); }} className="space-y-4">
-            <div><Label className="text-sm font-semibold">Categoria</Label><Input type="text" placeholder="Ex: Produtos, Aluguel, Funcionario" value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="rounded-lg" /></div>
+            <div>
+              <Label className="text-sm font-semibold">Data do Gasto</Label>
+              <Input
+                type="date"
+                value={formData.createdAt}
+                onChange={(e) => setFormData({ ...formData, createdAt: e.target.value })}
+                className="rounded-lg"
+              />
+            </div>
+            <div>
+              <Label className="text-sm font-semibold">Categoria</Label>
+              <Select value={formData.category} onValueChange={(v) => setFormData({ ...formData, category: v })}>
+                <SelectTrigger className="rounded-lg"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Produtos">🧴 Produtos</SelectItem>
+                  <SelectItem value="Aluguel">🏢 Aluguel</SelectItem>
+                  <SelectItem value="Funcionário">👨‍💼 Funcionário</SelectItem>
+                  <SelectItem value="Utensílios">🧹 Utensílios</SelectItem>
+                  <SelectItem value="Energia">⚡ Energia</SelectItem>
+                  <SelectItem value="Água">💧 Água</SelectItem>
+                  <SelectItem value="Manutenção">🔧 Manutenção</SelectItem>
+                  <SelectItem value="Outro">💸 Outro</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
             <div><Label className="text-sm font-semibold">Descricao</Label><Input type="text" placeholder="Ex: Xampu e sabao" value={formData.description} onChange={(e) => setFormData({ ...formData, description: e.target.value })} className="rounded-lg" /></div>
             <div><Label className="text-sm font-semibold">Valor (R$)</Label><Input type="number" step="0.01" placeholder="0.00" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} className="rounded-lg" /></div>
             <Button type="submit" disabled={loading} className="w-full bg-red-600 hover:bg-red-700 text-white rounded-lg font-semibold">
